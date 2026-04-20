@@ -46,6 +46,8 @@ class Backpack {
     if (armed || plugged) {
       armed = !armed;
       interface.displayStatus(armed, plugged, true);
+    } else if (!plugged) {
+      interface.notifyOnBatt();
     }
   }
 

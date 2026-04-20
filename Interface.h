@@ -21,11 +21,18 @@ class Interface {
     Sound sound;
 
     bool authenticated = 0;
-    bool lastButtonInput = 1; // TEMP
+
+    unsigned int notifyTime = 0;
+
     char keycode[KEYCODE_LEN];
     int keycodeLen = 0;
     void checkKeycode();
     void checkKeyPressed();
+
+    void tickNotify();
+
+    bool _armed = 0;    // Varialbles for if data needs to be rewritten
+    bool _plugged = 0;
 
   public:
     Interface() : lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7) {
@@ -33,6 +40,8 @@ class Interface {
     };
 
     bool checkAuthenticated();
+    void notifyUnauth();
+    void notifyOnBatt();
 
     void displayArmed();
     void displayDisarmed();

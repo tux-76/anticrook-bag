@@ -20,35 +20,39 @@ int Sound::popNote() {
 }
 
 void Sound::playNextNote() {
-  if (alarm) return;
-
-  changeTime = millis();
+  noteTick = millis();
   if (numNotes > 0) {
     int note = popNote();
     tone(ALARM_PIN, note);
   } else {
-    noTone(ALARM_PIN);
+    if (!alarm) noTone(ALARM_PIN);
+    else soundAlarmTone();
   }
 }
 
 void Sound::tick() {
   unsigned long time = millis();
-  unsigned long timePassed = time - changeTime;
+  unsigned long noteTickDur = time - noteTick;
+  unsigned long alarmTickDur = time - alarmTick;
   if (alarm) {
-    if (timePassed > ALARM_BEEP_DUR) {
+    if (alarmTickDur > ALARM_BEEP_DUR) {
       alarmHigh = !alarmHigh;
       soundAlarmTone();
 
-      changeTime = time;
+      alarmTick = time;
     }
   }
-  else if (timePassed > FEEDBACK_BEEP_DUR) {
+  
+  if (noteTickDur > FEEDBACK_BEEP_DUR) {
     playNextNote();
   }
 }
 
 void Sound::soundAlarm() {
   alarm = 1;
+  alarmTick = millis();
+  alarmHigh = 1;
+  soundAlarmTone();
 }
 
 void Sound::endAlarm() {

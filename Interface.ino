@@ -16,6 +16,26 @@ void Interface::setup() {
 
 // --- Display ---
 
+void Interface::notifyOnBatt() {
+  Serial.println("Interface Notify: On Batt");
+  notifyTime = 50;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("On battery");
+  lcd.setCursor(0, 1);
+  lcd.print("Cannot secure ");
+  lcd.write(SYMBOL_UNLOCKED);
+}
+
+void Interface::notifyUnauth() {
+  Serial.println("Interface Notify: Unauthorized");
+  sound.beepUnauth();
+  notifyTime = 40;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("INVALID CODE");
+}
+
 void Interface::displayArmed() {
   lcd.setCursor(0, 0);
   lcd.write(SYMBOL_LOCKED);
@@ -48,6 +68,7 @@ void Interface::displayKeycodeStatus() {
 }
 
 void Interface::displayStatus(bool armed, bool plugged, bool armBeep) {
+  _armed = armed; _plugged = plugged;
   lcd.clear();
   displayArmStatus(armed);
   displayPlugStatus(plugged);
@@ -76,12 +97,15 @@ void Interface::endAlert() {
   sound.endAlarm();
 }
 
+// --- Keypad entry ---
 void Interface::checkKeycode() {
   authenticated = 1;
   for (int i = 0; i < KEYCODE_LEN; i++) {
     if (keycode[i] != TRUE_CODE[i]) authenticated = 0;
   }
-  if (!authenticated) sound.beepUnauth();
+  if (!authenticated) {
+    notifyUnauth();
+  }
 }
 
 void Interface::checkKeyPressed() {
@@ -99,12 +123,6 @@ void Interface::checkKeyPressed() {
     displayKeycodeStatus();
     Serial.println(keycode);
   }
-  
-  bool buttonIn = digitalRead(BUTTON_PIN);
-  if (buttonIn && !lastButtonInput) {
-    checkKeycode();
-  }
-  lastButtonInput = buttonIn;
 }
 
 bool Interface::checkAuthenticated() {
@@ -114,9 +132,21 @@ bool Interface::checkAuthenticated() {
   } else return 0;
 }
 
+// --- Tick ---
+void Interface::tickNotify() {
+  if (notifyTime > 1) {
+    notifyTime--;
+  } else if (notifyTime == 1) {
+    Serial.println("Notification reset.");
+    displayStatus(_armed, _plugged);
+    displayKeycodeStatus();
+    notifyTime = 0;
+  }
+}
+
 void Interface::tick() {
   sound.tick();
-
+  tickNotify();
   checkKeyPressed();
  
 }

@@ -11,7 +11,8 @@ constexpr int FEEDBACK_BEEP_DUR = 100;
 
 class Sound {
   private:
-    unsigned long changeTime = 0;
+    unsigned long noteTick = 0;
+    unsigned long alarmTick = 0;
     bool alarm = 0;
     bool alarmHigh = 0;
 
