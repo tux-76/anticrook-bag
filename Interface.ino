@@ -80,7 +80,7 @@ void Interface::displayStatus(bool armed, bool plugged, bool armBeep) {
 }
 
 void Interface::displayAlert() {
-  sound.soundAlarm();
+  sound.soundWarning();
 
   lcd.clear();
   lcd.setCursor(1, 0);
@@ -94,7 +94,7 @@ void Interface::displayAlert() {
 }
 
 void Interface::endAlert() {
-  sound.endAlarm();
+  sound.endWarning();
 }
 
 // --- Keypad entry ---

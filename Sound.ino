@@ -23,10 +23,14 @@ void Sound::playNextNote() {
   noteTick = millis();
   if (numNotes > 0) {
     int note = popNote();
-    tone(ALARM_PIN, note);
+    tone(PIEZO_PIN, note);
+    if (warning) alarmInterrupted = 1;
   } else {
-    if (!alarm) noTone(ALARM_PIN);
-    else soundAlarmTone();
+    if (!warning) noTone(PIEZO_PIN);
+    else if (alarmInterrupted) {
+      soundWarningTone();
+      alarmInterrupted = 0;
+    }
   }
 }
 
@@ -34,10 +38,10 @@ void Sound::tick() {
   unsigned long time = millis();
   unsigned long noteTickDur = time - noteTick;
   unsigned long alarmTickDur = time - alarmTick;
-  if (alarm) {
+  if (warning) {
     if (alarmTickDur > ALARM_BEEP_DUR) {
       alarmHigh = !alarmHigh;
-      soundAlarmTone();
+      soundWarningTone();
 
       alarmTick = time;
     }
@@ -48,16 +52,16 @@ void Sound::tick() {
   }
 }
 
-void Sound::soundAlarm() {
-  alarm = 1;
+void Sound::soundWarning() {
+  warning = 1;
   alarmTick = millis();
   alarmHigh = 1;
-  soundAlarmTone();
+  soundWarningTone();
 }
 
-void Sound::endAlarm() {
-  alarm = 0;
-  noTone(ALARM_PIN);
+void Sound::endWarning() {
+  warning = 0;
+  noTone(PIEZO_PIN);
 }
 
 void Sound::beepArmed() {
