@@ -68,6 +68,7 @@ void Interface::displayKeycodeStatus() {
 }
 
 void Interface::displayStatus(bool armed, bool plugged, bool armBeep) {
+  Serial.print("Display Status");
   _armed = armed; _plugged = plugged;
   lcd.clear();
   displayArmStatus(armed);
@@ -79,8 +80,13 @@ void Interface::displayStatus(bool armed, bool plugged, bool armBeep) {
   }
 }
 
-void Interface::displayAlert() {
-  sound.soundWarning();
+void Interface::displayAlert(bool isAlarm) {
+  if (isAlarm) {
+    sound.endWarning();
+    sound.soundAlarm();
+  } else {
+    sound.soundWarning();
+  }
 
   lcd.clear();
   lcd.setCursor(1, 0);
@@ -95,6 +101,7 @@ void Interface::displayAlert() {
 
 void Interface::endAlert() {
   sound.endWarning();
+  sound.endAlarm();
 }
 
 // --- Keypad entry ---

@@ -58,7 +58,7 @@ class Interface {
     void displayKeycodeStatus();
     void displayStatus(bool armed, bool plugged, bool armBeep = false);
 
-    void displayAlert();
+    void displayAlert(bool isAlarm);
     void endAlert();
 
     void setup();

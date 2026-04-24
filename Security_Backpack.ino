@@ -4,19 +4,24 @@
 #include "Scan.h"
 #include "Keypad.h"
 
-
+constexpr long warningDuration = 20000; // The warning duration in ms
 
 class Backpack {
   private:
   // === PRIVATE VARIABLES ===
   bool armed = 0;
-  bool alert = 0;
   bool plugged = 0;
   bool auth = 0;
 
   bool lastPlugged = 1;
 
-  // -=== MODULES ===
+  bool warning = 0;
+  bool alarm = 0;
+  unsigned long warningStartTime = 0;
+
+  bool isAlert() { return (warning || alarm); }
+
+  // === MODULES ===
   Interface interface;
   
 
@@ -27,17 +32,29 @@ class Backpack {
     auth = interface.checkAuthenticated();
     plugged = checkPluggedMain();
     // If plug status changed, update display
-    if (lastPlugged != plugged && !alert) interface.displayStatus(armed, plugged);
+    if (lastPlugged != plugged && !isAlert()) interface.displayStatus(armed, plugged);
     lastPlugged = plugged;
     // DEBUG: Print
-    // Serial.print("Arm="); Serial.print(armed); Serial.print(" Plug="); Serial.print(plugged); Serial.print(" Alert="); Serial.print(alert); Serial.print(auth ? " AUTH" : ""); Serial.println();
+    // Serial.print("Arm="); Serial.print(armed); Serial.print(" Plug="); Serial.print(plugged); Serial.print(" Alert="); Serial.print(isAlert()); if(warning)Serial.print("Warning="); if(warning)Serial.print((millis() - warningStartTime)); if(auth)Serial.print(" AUTH"); Serial.println();
   }
   
+  void startWarning() {
+    interface.displayAlert(0);
+    warning = 1;
+    warningStartTime = millis();
+  }
+
   // --- Update Alert ---
   void updateAlert() {
-    if (armed && !plugged && !alert) {
-      alert = 1;
-      interface.displayAlert();
+    // Serial.println(millis() - warningStartTime);
+    if (warning) if (millis() - warningStartTime > warningDuration) {
+      Serial.println("STARTING FULL ALARM");
+      warning = 0;
+      alarm = 1;
+      interface.displayAlert(1); // Sound full alarm
+    }
+    if (armed && !plugged && !isAlert()) {
+      startWarning();
     } 
   }
 
@@ -53,7 +70,8 @@ class Backpack {
 
   // --- End Alert ---
   void endAlert() {
-    alert = 0;
+    alarm = 0;
+    warning = 0;
     interface.endAlert();
   }
 
@@ -72,7 +90,7 @@ class Backpack {
     updateAlert();
     
     if (auth) {
-      if (alert) endAlert();
+      if (isAlert()) endAlert();
       updateArmed();
     }
   }
@@ -81,14 +99,35 @@ class Backpack {
 
 Backpack backpack;
 
+// --- DEBUG ---
+Sound sound;
+unsigned long changeTime = 0;
+bool alarm = 0;
+
+LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+
+// --- END DEBUG ---
 void setup() {
   Serial.begin(9600);
   backpack.setup();
+  // sound.soundWarning();
   delay(2000);
 }
 
 void loop() {
   backpack.tick();
+  
+  // sound.tick();
+  // unsigned long time = millis();
+  // Serial.println(time - changeTime);
+  // if (time - changeTime > warningDuration && !alarm) {
+  //   Serial.println("Ending warning!");
+  //   delay(1000);
+  //   alarm = 1;
+  //   sound.endWarning();
+  //   sound.soundAlarm();
+  // }
+
   delay(50);
 
 }

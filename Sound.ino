@@ -1,6 +1,7 @@
 #include "Sound.h"
 #include <cassert>
 
+// --- Note manager ---
 void Sound::pushNote(int note) {
   if (numNotes < MAX_QUEUE_NOTES) { 
     notes[numNotes] = note;
@@ -24,34 +25,19 @@ void Sound::playNextNote() {
   if (numNotes > 0) {
     int note = popNote();
     tone(PIEZO_PIN, note);
-    if (warning) alarmInterrupted = 1;
+    if (isAlert()) alarmInterrupted = 1;
   } else {
-    if (!warning) noTone(PIEZO_PIN);
+    // Serial.print(warning); Serial.println(alarm);
+    if (!isAlert()) noTone(PIEZO_PIN);
     else if (alarmInterrupted) {
-      soundWarningTone();
+      if (alarm) soundAlarmTone();
+      else soundWarningTone();
       alarmInterrupted = 0;
     }
   }
 }
 
-void Sound::tick() {
-  unsigned long time = millis();
-  unsigned long noteTickDur = time - noteTick;
-  unsigned long alarmTickDur = time - alarmTick;
-  if (warning) {
-    if (alarmTickDur > ALARM_BEEP_DUR) {
-      alarmHigh = !alarmHigh;
-      soundWarningTone();
-
-      alarmTick = time;
-    }
-  }
-  
-  if (noteTickDur > FEEDBACK_BEEP_DUR) {
-    playNextNote();
-  }
-}
-
+// --- Warning ---
 void Sound::soundWarning() {
   warning = 1;
   alarmTick = millis();
@@ -59,11 +45,37 @@ void Sound::soundWarning() {
   soundWarningTone();
 }
 
+void Sound::soundWarningTone() {
+  if (alarmHigh) tone(PIEZO_PIN, 2000);
+  else tone(PIEZO_PIN, 1300);
+}
+
 void Sound::endWarning() {
   warning = 0;
+  alarmInterrupted = 0;
   noTone(PIEZO_PIN);
 }
 
+// --- Alarm ---
+void Sound::soundAlarm() {
+  alarm = 1;
+  alarmTick = millis();
+  alarmHigh = 1;
+  soundAlarmTone();
+}
+
+void Sound::soundAlarmTone() {
+  if (alarmHigh) tone(ALARM_PIN, 2000);
+  else tone(ALARM_PIN, 1300);
+}
+
+void Sound::endAlarm() {
+  alarm = 0;
+  alarmInterrupted = 0;
+  noTone(ALARM_PIN);
+}
+
+// --- Beeps ---
 void Sound::beepArmed() {
   pushNote(NOTE_G5);
   pushNote(NOTE_C6);
@@ -88,4 +100,24 @@ void Sound::beepUnauth() {
   pushNote(NOTE_REST);
   pushNote(NOTE_F2);
   playNextNote();
+}
+
+// --- Tick ---
+void Sound::tick() {
+  unsigned long time = millis();
+  unsigned long noteTickDur = time - noteTick;
+  unsigned long alarmTickDur = time - alarmTick;
+  if (isAlert()) {
+    if (alarmTickDur > ALARM_BEEP_DUR) {
+      alarmHigh = !alarmHigh;
+      if (warning) soundWarningTone();
+      else soundAlarmTone();
+
+      alarmTick = time;
+    }
+  }
+  
+  if (noteTickDur > FEEDBACK_BEEP_DUR) {
+    playNextNote();
+  }
 }
