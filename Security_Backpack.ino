@@ -99,34 +99,14 @@ class Backpack {
 
 Backpack backpack;
 
-// --- DEBUG ---
-Sound sound;
-unsigned long changeTime = 0;
-bool alarm = 0;
-
-LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
-
-// --- END DEBUG ---
 void setup() {
   Serial.begin(9600);
   backpack.setup();
-  // sound.soundWarning();
   delay(2000);
 }
 
 void loop() {
   backpack.tick();
-  
-  // sound.tick();
-  // unsigned long time = millis();
-  // Serial.println(time - changeTime);
-  // if (time - changeTime > warningDuration && !alarm) {
-  //   Serial.println("Ending warning!");
-  //   delay(1000);
-  //   alarm = 1;
-  //   sound.endWarning();
-  //   sound.soundAlarm();
-  // }
 
   delay(50);
 
