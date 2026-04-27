@@ -1,7 +1,7 @@
 #include "Interface.h"
 
 // === INTERFACE ===
-// --- Contstructor ---
+// --- Constructor ---
 // Like the setup() function of the interface;
 void Interface::setup() {
   lcd.begin(16, 2);
@@ -14,14 +14,17 @@ void Interface::setup() {
   displayDisarmed();
 }
 
-// --- Display ---
+void Interface::registerError(int code) {
+  backpackError = code;
+}
 
-void Interface::notifyOnBatt() {
+// --- Display ---
+void Interface::notifyAccelError() {
   Serial.println("Interface Notify: On Batt");
   notifyTime = 50;
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("On battery");
+  lcd.print("ACCEL ERROR :(");
   lcd.setCursor(0, 1);
   lcd.print("Cannot secure ");
   lcd.write(SYMBOL_UNLOCKED);
@@ -36,10 +39,27 @@ void Interface::notifyUnauth() {
   lcd.print("INVALID CODE");
 }
 
-void Interface::displayArmed() {
+void Interface::notifyAccel() {
+  Serial.println("Interface Notify: Accelerometer");
+  notifyTime = 100;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Secured with");
+  lcd.setCursor(0, 1);
+  lcd.print("Accelerometer ");
+  lcd.write(SYMBOL_LOCKED);
+}
+
+void Interface::displayArmedPlug() {
   lcd.setCursor(0, 0);
   lcd.write(SYMBOL_LOCKED);
   lcd.print(" SECURE ");
+}
+
+void Interface::displayArmedAccel() {
+  lcd.setCursor(0, 0);
+  lcd.write(SYMBOL_LOCKED);
+  lcd.print(" ACCEL ");
 }
 
 void Interface::displayDisarmed() {
@@ -67,17 +87,27 @@ void Interface::displayKeycodeStatus() {
   for (int i = 0; i < keycodeLen; i++) lcd.print("*");
 }
 
-void Interface::displayStatus(bool armed, bool plugged, bool armBeep) {
+void Interface::displayError() {
+  if (backpackError == ERROR_ACCEL_NOT_CONNECTED) {
+    lcd.setCursor(12, 1);
+    lcd.write(SYMBOL_WARNING);
+    lcd.print("ACL");
+  }
+}
+
+void Interface::displayStatus(bool armedPlug, bool armedAccel, bool armedPhoto, bool plugged) {
   Serial.print("Display Status");
-  _armed = armed; _plugged = plugged;
+  _armedPlug = armedPlug; _armedAccel = armedAccel; _armedPhoto = armedPhoto; _plugged = plugged;
   lcd.clear();
-  displayArmStatus(armed);
+  displayArmStatus(armedPlug, armedAccel);
   displayPlugStatus(plugged);
   displayKeycodeStatus();
-  if (armBeep) {
-    if (armed) sound.beepArmed();
-    else sound.beepDisarmed();
-  }
+  displayError();
+}
+
+void Interface::armPlugBeep(bool up) {
+  if (up) sound.beepArmed();
+  else sound.beepDisarmed();
 }
 
 void Interface::displayAlert(bool isAlarm) {
@@ -145,7 +175,7 @@ void Interface::tickNotify() {
     notifyTime--;
   } else if (notifyTime == 1) {
     Serial.println("Notification reset.");
-    displayStatus(_armed, _plugged);
+    displayStatus(_armedPlug, _armedAccel, _armedPhoto, _plugged);
     displayKeycodeStatus();
     notifyTime = 0;
   }

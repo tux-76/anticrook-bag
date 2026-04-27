@@ -3,6 +3,7 @@
 
 #include "LCD_Symbols.h"
 #include "Keypad.h"
+#include "Scan.h" // For error codes
 
 // === LCD SCREEN ===
 constexpr int LCD_RS=52, LCD_EN=53, LCD_D4=48, LCD_D5=49, LCD_D6=50, LCD_D7=51;
@@ -31,22 +32,30 @@ class Interface {
 
     void tickNotify();
 
-    bool _armed = 0;    // Varialbles for if data needs to be rewritten
+    bool _armedPlug = 0;    // Varialbles for if data needs to be rewritten
+    bool _armedAccel = 0;
+    bool _armedPhoto = 0;
     bool _plugged = 0;
+
+    int backpackError = 0;
 
   public:
     Interface() : lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7) {
       pinMode(BUTTON_PIN, INPUT);
     };
+    void registerError(int code);
 
     bool checkAuthenticated();
     void notifyUnauth();
-    void notifyOnBatt();
+    void notifyAccelError(); // Depricated
+    void notifyAccel();
 
-    void displayArmed();
+    void displayArmedPlug();
+    void displayArmedAccel();
     void displayDisarmed();
-    void displayArmStatus(bool armed) {
-      if (armed) displayArmed();
+    void displayArmStatus(bool armedPlug, bool armedAccel) {
+      if (armedPlug) displayArmedPlug();
+      else if (armedAccel) displayArmedAccel();
       else displayDisarmed();
     }
     void displayPlugged();
@@ -56,10 +65,13 @@ class Interface {
       else displayUnplugged();
     }
     void displayKeycodeStatus();
-    void displayStatus(bool armed, bool plugged, bool armBeep = false);
+    void displayError();
+    void displayStatus(bool armedPlug, bool armedAccel, bool armedPhoto, bool plugged);
 
     void displayAlert(bool isAlarm);
     void endAlert();
+
+    void armPlugBeep(bool up);
 
     void setup();
     void tick();

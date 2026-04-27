@@ -1,13 +1,27 @@
 #ifndef SCAN_H
 #define SCAN_H
 
+#include "Accelerometer.h"
+
 #define VIN_PIN A0
 
-constexpr int THRESHOLD_ANALOG = 800; // 7V (= V / 10V * 1023) (/10V because voltage divider circuit converts 10V to 5V)
+// Errors
+#define ERROR_ACCEL_NOT_CONNECTED 10
 
-bool checkPluggedMain() {
-  return (analogRead(VIN_PIN) > THRESHOLD_ANALOG);
-  // return !digitalRead(22);
-}
+constexpr int VOLTAGE_THRESHOLD = 800;
+constexpr float MOVEMENT_THRESHOLD = 2.0;
+
+class Scan {
+  private:
+    Accelerometer accel;
+    bool accelOperational = 1;
+
+  public:
+    int setup();
+    void tick();
+
+    bool checkPluggedMain();
+    bool checkAccelMovement();
+};
 
 #endif
