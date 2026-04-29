@@ -28,7 +28,7 @@
 #include "Scan.h"
 #include "Keypad.h"
 
-constexpr long warningDuration = 20000; // The warning duration in ms
+constexpr long warningDuration = 10000; // The warning duration in ms
 
 class Backpack {
   private:
