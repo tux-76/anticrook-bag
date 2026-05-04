@@ -45,6 +45,6 @@ bool Scan::checkPluggedMain() {
 
 bool Scan::checkAccelMovement() {
   float movement = accel.calcMovement();
-  Serial.println(movement);
+  // Serial.println(movement);
   return (movement > MOVEMENT_THRESHOLD);
 }

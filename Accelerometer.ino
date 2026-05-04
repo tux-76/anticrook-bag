@@ -37,19 +37,10 @@ bool Accelerometer::setup() {
   Serial.println("MPU6050 Found!");
   //We're not using the accelerometer, but when I removed this code, it wouldn't compile correctly
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-  Serial.print("Accelerometer range set to: ");
-  switch (mpu.getAccelerometerRange()) {
-  }
   //Gyro settings. I'm keeping the range to 500 deg because it works well enough here; can go up to 2000 in increments of 500
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
-  Serial.print("Gyro range set to: ");
-  switch (mpu.getGyroRange()) {
-  }
   //Filter bandwidth settings. Determines how frequently the gyro itself takes reading; currently set to second lowest
   mpu.setFilterBandwidth(MPU6050_BAND_10_HZ);
-  Serial.print("Filter bandwidth set to: ");
-  switch (mpu.getFilterBandwidth()) {
-  }
   //Establishing Variables so alarm doesn't trip immediately
   sensors_event_t a, g, temp;  mpu.getEvent(&a, &g, &temp);
   pitCurX = g.gyro.x;  pitCurY = g.gyro.y;  pitCurZ = g.gyro.z;

@@ -120,7 +120,7 @@ void Interface::displayError() {
 }
 
 void Interface::displayStatus(bool armedPlug, bool armedAccel, bool armedPhoto, bool plugged) {
-  Serial.print("Display Status");
+  // Serial.println("DP");
   _armedPlug = armedPlug; _armedAccel = armedAccel; _armedPhoto = armedPhoto; _plugged = plugged;
   lcd.clear();
   displayArmStatus(armedPlug, armedAccel);
@@ -178,11 +178,11 @@ void Interface::checkKeyPressed() {
       keycodeLen++;
     }
     if (keycodeLen >= KEYCODE_LEN) {
+      Serial.print("Keycode Input: "); Serial.println(keycode);
       checkKeycode();
       keycodeLen = 0;
     }
     displayKeycodeStatus();
-    Serial.println(keycode);
   }
 }
 

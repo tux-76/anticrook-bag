@@ -123,6 +123,9 @@ class Backpack {
   public:
   // === SETUP & TICK ===
   void setup() {
+    delay(2000); // Delay 1s for Serial
+    Serial.println("Starting Security Backpack!");
+
     int error = scan.setup();
     interface.registerError(error);
     if (error == ERROR_ACCEL_NOT_CONNECTED) accelOperational = 0;
