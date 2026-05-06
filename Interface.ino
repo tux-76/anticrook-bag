@@ -190,15 +190,17 @@ void Interface::endAlert() {
   sound.endAlarm();
 }
 
-// --- Keypad entry ---
-void Interface::checkKeycode() {
-  authenticated = 1;
-  for (int i = 0; i < KEYCODE_LEN; i++) {
-    if (keycode[i] != TRUE_CODE[i]) authenticated = 0;
-  }
-  if (!authenticated) {
-    notifyUnauth();
-  }
+bool Interface::checkKeycodeIn() {
+  if (keycodeLen > KEYCODE_LEN) Serial.println("WARNING: Checking too long of a keycode!");
+  return (keycodeLen >= KEYCODE_LEN);
+}
+
+char* Interface::getKeycode () {
+  return keycode;
+}
+
+void Interface::clearKeycode() {
+  keycodeLen = 0;
 }
 
 void Interface::checkKeyPressed() {
@@ -208,21 +210,9 @@ void Interface::checkKeyPressed() {
     if (keycodeLen < KEYCODE_LEN) { // If code isn't complete
       keycode[keycodeLen] = key;
       keycodeLen++;
-    }
-    if (keycodeLen >= KEYCODE_LEN) {
-      Serial.print("Keycode Input: "); Serial.println(keycode);
-      checkKeycode();
-      keycodeLen = 0;
-    }
+    } else Serial.print("WARNING: Keycode too long!");
     displayKeycodeStatus();
   }
-}
-
-bool Interface::checkAuthenticated() {
-  if (authenticated) {
-    authenticated = 0;
-    return 1;
-  } else return 0;
 }
 
 // --- Tick ---

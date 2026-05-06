@@ -23,10 +23,8 @@
 */
 
 #include <LiquidCrystal.h>
-#include "Sound.h"
 #include "Interface.h"
 #include "Scan.h"
-#include "Keypad.h"
 
 constexpr long warningDuration = 10000; // The warning duration in ms
 
@@ -37,7 +35,7 @@ class Backpack {
   bool armedAccel = 0;
   bool armedPhoto = 0;
   bool plugged = 0;
-  bool auth = 0;
+  bool authenticated = 0;
 
   bool photoCalibCirc = 0;
   bool photoCalibPack = 0;
@@ -58,12 +56,12 @@ class Backpack {
   // === MODULES ===
   Interface interface;
   Scan scan;
+  Auth auth;
 
   // === PRIVATE FUNCTIONS ===
   // --- Update Status ---
   void updateStatus() {
     // Update
-    auth = interface.checkAuthenticated();
     plugged = scan.checkPluggedMain();
     // If plug status changed, update display
     if (lastPlugged != plugged && !isAlert()) interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
@@ -124,7 +122,20 @@ class Backpack {
     }
   }
 
-  // --- Update Armed ---
+  // --- Arming & Authentication ---
+  void updateAuth() {
+    if (interface.checkKeycodeIn()) {
+      char* keycode = interface.getKeycode();
+      interface.clearKeycode();
+      Serial.print("Keycode in: "); Serial.println(keycode);
+      authenticated = auth.checkKeycode(keycode);
+      Serial.println(authenticated);
+      if (!authenticated) {
+        interface.notifyUnauth();
+      }
+    }
+  }
+
   // Runs when authenticated and arm needs to toggle
   void updateArmed() {
     if (!armedAccel && (armedPlug || plugged)) { // If plugged in or secured by plug
@@ -134,7 +145,7 @@ class Backpack {
       if (accelOperational) {
         armedAccel = !armedAccel;
         interface.armPlugBeep(armedAccel);
-        if (armedAccel) interface.notifyAccel();
+        // if (armedAccel) interface.notifyAccel();
       } else {
         interface.notifyAccelError();
       }
@@ -147,6 +158,7 @@ class Backpack {
       armedPhoto = 0;
     }
 
+    if(!(armedPlug || armedAccel)) interface.endNotify();
     interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
   }
 
@@ -201,6 +213,8 @@ class Backpack {
     interface.registerError(error);
     if (error == ERROR_ACCEL_NOT_CONNECTED) accelOperational = 0;
     interface.setup();
+    auth.setup();
+
     interface.displayStatus(armedPlug, armedAccel, armedPhoto, lastPlugged);
     interface.endAlert();
   }
@@ -209,11 +223,13 @@ class Backpack {
     scan.tick();
     interface.tick();
 
+    updateAuth();
     updateStatus();
     updatePhotoCalib();
     updateAlert();
     
-    if (auth) {
+    if (authenticated) {
+      authenticated = 0;
       if (isAlert()) endAlert();
       updateArmed();
     }
@@ -234,7 +250,7 @@ void setup() {
 
 void loop() {
   backpack.tick();
-  Serial.print(analogRead(PHOTO_CIRC_PIN)); Serial.print(" "); Serial.println(analogRead(PHOTO_PACK_PIN));
+  // Serial.print(analogRead(PHOTO_CIRC_PIN)); Serial.print(" "); Serial.println(analogRead(PHOTO_PACK_PIN));
 
 
   delay(50);

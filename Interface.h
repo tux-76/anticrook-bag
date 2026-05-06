@@ -28,14 +28,13 @@
 #include "LCD_Symbols.h"
 #include "Keypad.h"
 #include "Scan.h" // For error codes
+#include "Auth.h"
+#include "Sound.h"
 
 // === LCD SCREEN ===
 constexpr int LCD_RS=52, LCD_EN=53, LCD_D4=48, LCD_D5=49, LCD_D6=50, LCD_D7=51;
 // constexpr int LCD_RS=52, LCD_EN=53, LCD_D4=48, LCD_D5=49, LCD_D6=50, LCD_D7=51;
 constexpr int BUTTON_PIN = 22;
-
-constexpr int KEYCODE_LEN = 4;
-const char TRUE_CODE[KEYCODE_LEN] = {'1', '2', '3', '4'};
 
 // === INTERFACE ===
 class Interface {
@@ -51,7 +50,6 @@ class Interface {
 
     char keycode[KEYCODE_LEN];
     int keycodeLen = 0;
-    void checkKeycode();
     void checkKeyPressed();
 
     void tickNotify();
@@ -69,7 +67,10 @@ class Interface {
     };
     void registerError(int code);
 
-    bool checkAuthenticated();
+    bool checkKeycodeIn();
+    char* getKeycode();
+    void clearKeycode();
+
     void notifyUnauth();
     void notifyAccelError(); // Depricated
     void notifyAccel();
