@@ -181,7 +181,7 @@ class Backpack {
     if(armedPhoto && !alarm) {
       bool circOpen = scan.checkPhotoLight(PHOTO_CIRC_PIN, darkValPhotoCirc);
       bool packOpen = scan.checkPhotoLight(PHOTO_PACK_PIN, darkValPhotoPack);
-      if (circOpen || packOpen) {
+      if (circOpen || (packOpen && !warning)) {
         startWarning(circOpen ? 1 : 0); // Sound alarm instantly if circuitry is open
         Serial.println("PHOTO OPENED!");
       }
