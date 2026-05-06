@@ -1,0 +1,2 @@
+1. Fix notification reset when alarmed before accelerometer notify ends.
+2. Clear code after a certain time.
