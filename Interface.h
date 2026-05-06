@@ -70,12 +70,18 @@ class Interface {
     bool checkKeycodeIn();
     char* getKeycode();
     void clearKeycode();
+    bool keycodesAreEqual(char* code1, char* code2);
 
     void notifyUnauth();
     void notifyAccelError(); // Depricated
     void notifyAccel();
     void notifyPackUnsecure();
+    void notifyKeycodeResetError();
+    void notifyKeycodeResetSuccess();
     void endNotify();
+
+    void displayKeycodePrevCode();
+    void displayKeycodeNewCode();
 
     void displayArmedPlug();
     void displayArmedAccel();

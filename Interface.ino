@@ -43,7 +43,8 @@ void Interface::registerError(int code) {
   backpackError = code;
 }
 
-// --- Display ---
+// === DISPLAY ===
+// --- Notify ---
 void Interface::notifyAccelError() {
   Serial.println("Interface Notify: On Batt");
   notifyTime = 50;
@@ -89,6 +90,30 @@ void Interface::notifyPackUnsecure() {
   lcd.write(SYMBOL_UNLOCKED);
 }
 
+void Interface::notifyKeycodeResetError() {
+  Serial.println("Interface Notify: Keycode not reset");
+  notifyTime = 100;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.write(SYMBOL_WARNING);
+  lcd.print(" ");
+  lcd.print("KEYCODE RESET");
+  lcd.setCursor(0, 1);
+  lcd.print("FAILURE");
+}
+
+void Interface::notifyKeycodeResetSuccess() {
+  Serial.println("Interface Notify: Keycode Reset");
+  notifyTime = 100;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("KEYCODE RESET");
+  lcd.setCursor(0, 1);
+  lcd.print("SUCCESS ");
+  lcd.write(SYMBOL_LOCKED);
+}
+
+
 void Interface::endNotify() {
   notifyTime = 0;
   Serial.println("Notification reset.");
@@ -96,6 +121,22 @@ void Interface::endNotify() {
   displayKeycodeStatus();
 }
 
+// --- Dialoge ---
+void Interface::displayKeycodePrevCode() {
+  notifyTime = 0;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Current Code:");
+}
+
+void Interface::displayKeycodeNewCode() {
+  notifyTime = 0;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("New Code:");
+}
+
+// --- Display Status ---
 void Interface::displayArmedPlug() {
   lcd.setCursor(0, 0);
   lcd.write(SYMBOL_LOCKED);
@@ -135,6 +176,7 @@ void Interface::displayPhotoStatus(bool armedPhoto) {
 }
 
 void Interface::displayKeycodeStatus() {
+  Serial.println(keycodeLen);
   lcd.setCursor(0, 1);
   lcd.print("     ");
   lcd.setCursor(0, 1);
@@ -190,6 +232,7 @@ void Interface::endAlert() {
   sound.endAlarm();
 }
 
+// --- Keypad & Keycodes --- 
 bool Interface::checkKeycodeIn() {
   if (keycodeLen > KEYCODE_LEN) Serial.println("WARNING: Checking too long of a keycode!");
   return (keycodeLen >= KEYCODE_LEN);
@@ -201,6 +244,13 @@ char* Interface::getKeycode () {
 
 void Interface::clearKeycode() {
   keycodeLen = 0;
+}
+
+bool Interface::keycodesAreEqual(char *code1, char *code2) {
+  for (int i = 0; i < KEYCODE_LEN; i++) {
+    if (code1[i] != code2[i]) return 0;
+  }
+  return 1;
 }
 
 void Interface::checkKeyPressed() {

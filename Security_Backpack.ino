@@ -51,6 +51,9 @@ class Backpack {
 
   bool accelOperational = 1;
 
+  bool keycodeResetPrevCode = 0;
+  bool keycodeResetNewCode = 0;
+
   bool isAlert() { return (warning || alarm); }
 
   // === MODULES ===
@@ -126,12 +129,21 @@ class Backpack {
   void updateAuth() {
     if (interface.checkKeycodeIn()) {
       char* keycode = interface.getKeycode();
-      interface.clearKeycode();
       Serial.print("Keycode in: "); Serial.println(keycode);
-      authenticated = auth.checkKeycode(keycode);
-      Serial.println(authenticated);
-      if (!authenticated) {
-        interface.notifyUnauth();
+
+      bool special = checkSpecialCodes(keycode);
+      interface.clearKeycode();
+      Serial.print("Special="); Serial.println(special);
+
+      if (!special) {
+        authenticated = auth.checkKeycode(keycode);
+        if (!authenticated) {
+          interface.notifyUnauth();
+          keycodeResetPrevCode = 0; // If not auth, end keycode reset
+          keycodeResetNewCode = 0;
+        } else {
+          Serial.println("AUTHENTICATED");
+        }
       }
     }
   }
@@ -203,6 +215,53 @@ class Backpack {
     warning = 0;
     interface.endAlert();
   }
+
+  // --- Special Codes ---
+  bool checkSpecialCodes(char* keycode) { // Return 1 blocks default authentication behavior
+    if (armedPhoto || armedPlug) return 0; // No special codes when armed
+
+    if (interface.keycodesAreEqual(keycode, "AAAA")) {
+      startKeycodeReset();
+      return 1;
+    } else if (keycodeResetPrevCode) {
+      if (auth.checkKeycode(keycode)) {
+        startAuthKeycodeReset();
+        return 1;
+      }
+      keycodeResetPrevCode = 0;
+    } else if (keycodeResetNewCode) {
+      finishKeycodeReset(keycode);
+      return 1;
+    }
+    return 0;
+  }
+
+  void startKeycodeReset() {
+    Serial.println("KEYCODE RESET");
+    interface.displayKeycodePrevCode();
+    keycodeResetPrevCode = 1;
+  }
+
+  void startAuthKeycodeReset() {
+    Serial.println("Keycode reset: Authenticated.");
+    interface.displayKeycodeNewCode();
+    keycodeResetNewCode = 1;
+    keycodeResetPrevCode = 0;
+  }
+
+  void finishKeycodeReset(char* keycode) {
+    interface.clearKeycode();
+    if (!auth.resetKeycode(keycode)) { // If reset errors
+      interface.notifyKeycodeResetError();
+    } else {
+      interface.notifyKeycodeResetSuccess();
+    }
+    keycodeResetPrevCode = 0;
+    keycodeResetNewCode = 0;
+    interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
+  }
+
+
 
   public:
   // === SETUP & TICK ===

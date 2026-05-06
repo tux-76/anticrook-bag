@@ -47,7 +47,7 @@ bool Scan::tickPhotoSample() {
   if (photoSampleNum >= PHOTO_SAMPLES_NUM) return 1;
 
   int val = analogRead(photoSamplePin);
-  Serial.print(photoSamplePin); Serial.print(" "); Serial.println(val);
+  // Serial.print(photoSamplePin); Serial.print(" "); Serial.println(val);
   photoSamples[photoSampleNum] = val;
   photoSampleNum++;
 
