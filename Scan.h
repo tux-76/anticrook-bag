@@ -28,24 +28,37 @@
 #include "Accelerometer.h"
 
 #define VIN_PIN A0
+#define PHOTO_PACK_PIN A3 // The photo resistor in the bag
+#define PHOTO_CIRC_PIN A2 // The photo resistor in the circuitry
 
 // Errors
 #define ERROR_ACCEL_NOT_CONNECTED 10
 
 constexpr int VOLTAGE_THRESHOLD = 800;
 constexpr float MOVEMENT_THRESHOLD = 2.0;
+constexpr int PHOTO_THRESHOLD = 70;
+constexpr int PHOTO_SAMPLES_NUM = 20;
 
 class Scan {
   private:
     Accelerometer accel;
     bool accelOperational = 1;
 
+    int photoSamplePin = 0;
+    int photoSampleNum = 0;
+    int photoSamples[PHOTO_SAMPLES_NUM];
+
   public:
     int setup();
     void tick();
 
+    void startPhotoSample(int photoPin);
+    bool tickPhotoSample(); // Takes a single reading and stores it. Returns true when samples are done. Ran by outside user.
+    int getPhotoSampleAvg();
+
     bool checkPluggedMain();
     bool checkAccelMovement();
+    bool checkPhotoLight(int photo, int darkValue);
 };
 
 #endif

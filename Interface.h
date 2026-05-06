@@ -73,6 +73,7 @@ class Interface {
     void notifyUnauth();
     void notifyAccelError(); // Depricated
     void notifyAccel();
+    void endNotify();
 
     void displayArmedPlug();
     void displayArmedAccel();
@@ -88,6 +89,7 @@ class Interface {
       if (plugged) displayPlugged();
       else displayUnplugged();
     }
+    void displayPhotoStatus(bool armedPhoto);
     void displayKeycodeStatus();
     void displayError();
     void displayStatus(bool armedPlug, bool armedAccel, bool armedPhoto, bool plugged);

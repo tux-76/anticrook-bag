@@ -34,6 +34,7 @@ void Interface::setup() {
   lcd.createChar(SYMBOL_WARNING, SYMBOL_WARNING_IMG);
   lcd.createChar(SYMBOL_BATT, SYMBOL_BATT_IMG);
   lcd.createChar(SYMBOL_PLUG, SYMBOL_PLUG_IMG);
+  lcd.createChar(SYMBOL_PHOTO, SYMBOL_PHOTO_IMG);
   lcd.clear();
   displayDisarmed();
 }
@@ -74,6 +75,13 @@ void Interface::notifyAccel() {
   lcd.write(SYMBOL_LOCKED);
 }
 
+void Interface::endNotify() {
+  notifyTime = 0;
+  Serial.println("Notification reset.");
+  displayStatus(_armedPlug, _armedAccel, _armedPhoto, _plugged);
+  displayKeycodeStatus();
+}
+
 void Interface::displayArmedPlug() {
   lcd.setCursor(0, 0);
   lcd.write(SYMBOL_LOCKED);
@@ -104,6 +112,14 @@ void Interface::displayUnplugged() {
   lcd.print(" BATT");
 }
 
+void Interface::displayPhotoStatus(bool armedPhoto) {
+  if (armedPhoto) {
+    lcd.setCursor(9, 1);
+    lcd.write(SYMBOL_PHOTO);
+    lcd.print(" PACK");
+  }
+}
+
 void Interface::displayKeycodeStatus() {
   lcd.setCursor(0, 1);
   lcd.print("     ");
@@ -120,11 +136,13 @@ void Interface::displayError() {
 }
 
 void Interface::displayStatus(bool armedPlug, bool armedAccel, bool armedPhoto, bool plugged) {
-  // Serial.println("DP");
   _armedPlug = armedPlug; _armedAccel = armedAccel; _armedPhoto = armedPhoto; _plugged = plugged;
+  if (notifyTime > 0) return;
+  // Serial.println("DP");
   lcd.clear();
   displayArmStatus(armedPlug, armedAccel);
   displayPlugStatus(plugged);
+  displayPhotoStatus(armedPhoto);
   displayKeycodeStatus();
   displayError();
 }
@@ -198,10 +216,7 @@ void Interface::tickNotify() {
   if (notifyTime > 1) {
     notifyTime--;
   } else if (notifyTime == 1) {
-    Serial.println("Notification reset.");
-    displayStatus(_armedPlug, _armedAccel, _armedPhoto, _plugged);
-    displayKeycodeStatus();
-    notifyTime = 0;
+    endNotify();
   }
 }
 

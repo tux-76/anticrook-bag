@@ -24,7 +24,7 @@
 
 #include "Scan.h"
 
-
+// --- Setup & Tick ---
 int Scan::setup() {
   if (accel.setup()) {
     accelOperational = 0;
@@ -37,6 +37,32 @@ void Scan::tick() {
   if (accelOperational) accel.tick();
 }
 
+// --- Photo Samples ---
+void Scan::startPhotoSample(int photoPin) {
+  photoSamplePin = photoPin;
+  photoSampleNum = 0;
+}
+
+bool Scan::tickPhotoSample() {
+  if (photoSampleNum >= PHOTO_SAMPLES_NUM) return 1;
+
+  int val = analogRead(photoSamplePin);
+  Serial.print(photoSamplePin); Serial.print(" "); Serial.println(val);
+  photoSamples[photoSampleNum] = val;
+  photoSampleNum++;
+
+  return (photoSampleNum >= PHOTO_SAMPLES_NUM);
+}
+
+int Scan::getPhotoSampleAvg() {
+  int sum = 0;
+  for (int i = 0; i < photoSampleNum; i++) {
+    sum += photoSamples[i];
+  }
+  return (sum / photoSampleNum);
+}
+
+// --- Checking ---
 bool Scan::checkPluggedMain() {
   // Serial.println(analogRead(VIN_PIN));
   return (analogRead(VIN_PIN) > VOLTAGE_THRESHOLD);
@@ -47,4 +73,9 @@ bool Scan::checkAccelMovement() {
   float movement = accel.calcMovement();
   // Serial.println(movement);
   return (movement > MOVEMENT_THRESHOLD);
+}
+
+bool Scan::checkPhotoLight(int photo, int darkValue) {
+  int val = analogRead(photo);
+  return (val > darkValue + PHOTO_THRESHOLD);
 }

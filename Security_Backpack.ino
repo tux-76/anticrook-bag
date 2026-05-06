@@ -39,6 +39,11 @@ class Backpack {
   bool plugged = 0;
   bool auth = 0;
 
+  bool photoCalibCirc = 0;
+  bool photoCalibPack = 0;
+  int darkValPhotoCirc;
+  int darkValPhotoPack;
+
   bool lastPlugged = 1;
 
   bool warning = 0;
@@ -63,7 +68,7 @@ class Backpack {
     if (lastPlugged != plugged && !isAlert()) interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
     lastPlugged = plugged;
     // DEBUG: Print
-    // Serial.print("Arm="); Serial.print(armedPlug ? "PLUG" : (armedAccel ? "ACCEL" : "NONE")); Serial.print(" Plug="); Serial.print(plugged); Serial.print(" Alert="); Serial.print(isAlert()); if(warning)Serial.print("Warning="); if(warning)Serial.print((millis() - warningStartTime)); if(auth)Serial.print(" AUTH"); Serial.println();
+    // Serial.print("Arm="); Serial.print(armedPlug ? "PLUG" : (armedAccel ? "ACCEL" : "NONE")); if (armedPhoto) Serial.print(" PHOTO"); Serial.print(" Plug="); Serial.print(plugged); Serial.print(" Alert="); Serial.print(isAlert()); if(warning)Serial.print("Warning="); if(warning)Serial.print((millis() - warningStartTime)); if(auth)Serial.print(" AUTH"); Serial.println();
   }
   
   void startWarning() {
@@ -72,44 +77,94 @@ class Backpack {
     warningStartTime = millis();
   }
 
+  // --- Photo resistors ---
+  void startPhotoCalib() { // Start calibrating the photos
+    Serial.println("Starting circuit photo calibration...");
+    photoCalibCirc = 1; 
+    scan.startPhotoSample(PHOTO_CIRC_PIN);
+  }
+
+  void updatePhotoCalib() {
+    if (photoCalibCirc) {
+      bool done = scan.tickPhotoSample();
+      if (done) {
+        darkValPhotoCirc = scan.getPhotoSampleAvg();
+        photoCalibCirc = 0;
+        Serial.println("Starting pack photo calibration...");
+        photoCalibPack = 1;
+        scan.startPhotoSample(PHOTO_PACK_PIN);
+      }
+    } else if (photoCalibPack) {
+      bool done = scan.tickPhotoSample();
+      if (done) {
+        Serial.println("Photos calibrated.");
+        darkValPhotoPack = scan.getPhotoSampleAvg();
+        photoCalibPack = 0;
+        updateArmedPhoto();
+      }
+    }
+  }
+
+  void updateArmedPhoto() {
+    armedPhoto = 1;
+    Serial.print("Dark Val Circuit: "); Serial.println(darkValPhotoCirc);
+    Serial.print("Dark Val Pack: "); Serial.println(darkValPhotoPack);
+    interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
+  }
+
   // --- Update Armed ---
   // Runs when authenticated and arm needs to toggle
   void updateArmed() {
     if (!armedAccel && (armedPlug || plugged)) { // If plugged in or secured by plug
       armedPlug = !armedPlug;
-      interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
       interface.armPlugBeep(armedPlug);
     } else if (armedAccel || !plugged) { // If on battery or secured by accelerometer
       if (accelOperational) {
         armedAccel = !armedAccel;
-        interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
         interface.armPlugBeep(armedAccel);
         if (armedAccel) interface.notifyAccel();
       } else {
         interface.notifyAccelError();
       }
     }
+    // Photo resistors
+    Serial.print(armedAccel); Serial.print(" "); Serial.print(armedPlug);
+    if (armedAccel || armedPlug) { // If it is armed
+      startPhotoCalib();
+    } else {
+      armedPhoto = 0;
+    }
+
+    interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
   }
 
   // --- Update Alert ---
   // Check if any triggers need to fire alarm
   void updateAlert() {
-    // Check for armed plug violation
-    if (armedPlug && !plugged && !isAlert()) {
-      startWarning();
-    } else if (armedAccel && !isAlert()) {
-      if (scan.checkAccelMovement()) {
+    if (!isAlert()) {
+      // Check for armed plug or armed accel violation
+      if (armedPlug && !plugged) {
         startWarning();
-        Serial.println("ACCELEROMETER MOVEMENT!");
+      } else if (armedAccel) {
+        if (scan.checkAccelMovement()) {
+          startWarning();
+          Serial.println("ACCELEROMETER MOVEMENT!");
+        }
       }
-    }
 
-    // Check if loud alarm needs to sound
-    if (warning) if (millis() - warningStartTime > warningDuration) {
-      Serial.println("STARTING FULL ALARM");
-      warning = 0;
-      alarm = 1;
-      interface.displayAlert(1); // Sound full alarm
+      // Check for photo violation
+      if(armedPhoto) if (scan.checkPhotoLight(PHOTO_PACK_PIN, darkValPhotoPack) || scan.checkPhotoLight(PHOTO_CIRC_PIN, darkValPhotoCirc)) {
+        startWarning();
+        Serial.println("PHOTO OPENED!");
+      }
+    } else {
+      // Check if loud alarm needs to sound
+      if (warning) if (millis() - warningStartTime > warningDuration) {
+        Serial.println("STARTING FULL ALARM");
+        warning = 0;
+        alarm = 1;
+        interface.displayAlert(1); // Sound full alarm
+      }
     }
   }
 
@@ -139,6 +194,7 @@ class Backpack {
     interface.tick();
 
     updateStatus();
+    updatePhotoCalib();
     updateAlert();
     
     if (auth) {
@@ -150,19 +206,18 @@ class Backpack {
 
 
 Backpack backpack;
-#include "Accelerometer.h"
-Accelerometer accel;
+Scan scan;
 
 void setup() {
   Serial.begin(9600);
   backpack.setup();
-  // accel.setup();
   delay(2000);
 }
 
 void loop() {
   backpack.tick();
-  // accel.tick();
-  // Serial.println(accel.calcMovement());
+  Serial.print(analogRead(PHOTO_CIRC_PIN)); Serial.print(" "); Serial.println(analogRead(PHOTO_PACK_PIN));
+
+
   delay(50);
 }

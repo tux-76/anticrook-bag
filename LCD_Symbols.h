@@ -61,6 +61,7 @@ byte SYMBOL_WARNING_IMG[8] = {
 
 byte SYMBOL_PLUG_IMG[8] = { B00000, B01010, B01010, B11111, B01110, B01110, B00100, B00100 };
 byte SYMBOL_BATT_IMG[8] = { B00100, B11111, B10001, B11111, B11111, B11111, B11111, B11111 };
+byte SYMBOL_PHOTO_IMG[8] = { B00000, B10101, B01010, B00000, B10101, B01010, B00000, B00000 };
 
 // Indexes
 constexpr byte SYMBOL_LOCKED = 0;
@@ -68,5 +69,7 @@ constexpr byte SYMBOL_UNLOCKED = 1;
 constexpr byte SYMBOL_WARNING = 2;
 constexpr byte SYMBOL_PLUG = 3;
 constexpr byte SYMBOL_BATT = 4;
+constexpr byte SYMBOL_PHOTO = 5;
+
 
 #endif
