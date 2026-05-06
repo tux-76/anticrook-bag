@@ -49,6 +49,7 @@ class Backpack {
   bool warning = 0;
   bool alarm = 0;
   unsigned long warningStartTime = 0;
+  bool instantAlarm = 0; 
 
   bool accelOperational = 1;
 
@@ -71,7 +72,9 @@ class Backpack {
     // Serial.print("Arm="); Serial.print(armedPlug ? "PLUG" : (armedAccel ? "ACCEL" : "NONE")); if (armedPhoto) Serial.print(" PHOTO"); Serial.print(" Plug="); Serial.print(plugged); Serial.print(" Alert="); Serial.print(isAlert()); if(warning)Serial.print("Warning="); if(warning)Serial.print((millis() - warningStartTime)); if(auth)Serial.print(" AUTH"); Serial.println();
   }
   
-  void startWarning() {
+  void startWarning(bool _instantAlarm = 0) {
+    instantAlarm = _instantAlarm;
+    if (instantAlarm) Serial.println("INSTANT ALARM");
     interface.displayAlert(0);
     warning = 1;
     warningStartTime = millis();
@@ -153,13 +156,15 @@ class Backpack {
       }
 
       // Check for photo violation
-      if(armedPhoto) if (scan.checkPhotoLight(PHOTO_PACK_PIN, darkValPhotoPack) || scan.checkPhotoLight(PHOTO_CIRC_PIN, darkValPhotoCirc)) {
-        startWarning();
+      bool circOpen = scan.checkPhotoLight(PHOTO_CIRC_PIN, darkValPhotoCirc);
+      bool packOpen = scan.checkPhotoLight(PHOTO_PACK_PIN, darkValPhotoPack);
+      if(armedPhoto) if (circOpen || packOpen) {
+        startWarning(circOpen ? 1 : 0); // Sound alarm instantly if circuitry is open
         Serial.println("PHOTO OPENED!");
       }
     } else {
       // Check if loud alarm needs to sound
-      if (warning) if (millis() - warningStartTime > warningDuration) {
+      if (warning) if (instantAlarm || (millis() - warningStartTime > warningDuration)) {
         Serial.println("STARTING FULL ALARM");
         warning = 0;
         alarm = 1;
