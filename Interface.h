@@ -73,6 +73,7 @@ class Interface {
     void notifyUnauth();
     void notifyAccelError(); // Depricated
     void notifyAccel();
+    void notifyPackUnsecure();
     void endNotify();
 
     void displayArmedPlug();

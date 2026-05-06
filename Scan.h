@@ -36,7 +36,8 @@
 
 constexpr int VOLTAGE_THRESHOLD = 800;
 constexpr float MOVEMENT_THRESHOLD = 2.0;
-constexpr int PHOTO_THRESHOLD = 70;
+constexpr int PHOTO_THRESHOLD = 40;
+constexpr int PHOTO_MINIMUM = 100;
 constexpr int PHOTO_SAMPLES_NUM = 20;
 
 class Scan {

@@ -75,6 +75,20 @@ void Interface::notifyAccel() {
   lcd.write(SYMBOL_LOCKED);
 }
 
+void Interface::notifyPackUnsecure() {
+  Serial.println("Interface Notify: Pack unsecure");
+  notifyTime = 100;
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.write(SYMBOL_WARNING);
+  lcd.print(" ");
+  lcd.print("Pouch Open ");
+  lcd.write(SYMBOL_PHOTO);
+  lcd.setCursor(0, 1);
+  lcd.print("Pouch Insecure ");
+  lcd.write(SYMBOL_UNLOCKED);
+}
+
 void Interface::endNotify() {
   notifyTime = 0;
   Serial.println("Notification reset.");
@@ -116,7 +130,7 @@ void Interface::displayPhotoStatus(bool armedPhoto) {
   if (armedPhoto) {
     lcd.setCursor(9, 1);
     lcd.write(SYMBOL_PHOTO);
-    lcd.print(" PACK");
+    lcd.print(" POUCH");
   }
 }
 

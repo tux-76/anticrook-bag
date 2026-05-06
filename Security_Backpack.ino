@@ -109,10 +109,19 @@ class Backpack {
   }
 
   void updateArmedPhoto() {
-    armedPhoto = 1;
+    if (!(armedAccel || armedPlug)) {
+      Serial.println("Disarmed, aborting pouch arm.");
+      return;
+    }
     Serial.print("Dark Val Circuit: "); Serial.println(darkValPhotoCirc);
     Serial.print("Dark Val Pack: "); Serial.println(darkValPhotoPack);
-    interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
+    if (darkValPhotoCirc < PHOTO_MINIMUM && darkValPhotoPack < PHOTO_MINIMUM) {
+      armedPhoto = 1;
+      interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
+    } else {
+      armedPhoto = 0;
+      interface.notifyPackUnsecure();
+    }
   }
 
   // --- Update Armed ---
@@ -144,8 +153,8 @@ class Backpack {
   // --- Update Alert ---
   // Check if any triggers need to fire alarm
   void updateAlert() {
+    // Check for armed plug or armed accel violation
     if (!isAlert()) {
-      // Check for armed plug or armed accel violation
       if (armedPlug && !plugged) {
         startWarning();
       } else if (armedAccel) {
@@ -154,23 +163,26 @@ class Backpack {
           Serial.println("ACCELEROMETER MOVEMENT!");
         }
       }
+    }
 
-      // Check for photo violation
+    // Check for photo violation
+    if(armedPhoto && !alarm) {
       bool circOpen = scan.checkPhotoLight(PHOTO_CIRC_PIN, darkValPhotoCirc);
       bool packOpen = scan.checkPhotoLight(PHOTO_PACK_PIN, darkValPhotoPack);
-      if(armedPhoto) if (circOpen || packOpen) {
+      if (circOpen || packOpen) {
         startWarning(circOpen ? 1 : 0); // Sound alarm instantly if circuitry is open
         Serial.println("PHOTO OPENED!");
       }
-    } else {
-      // Check if loud alarm needs to sound
-      if (warning) if (instantAlarm || (millis() - warningStartTime > warningDuration)) {
-        Serial.println("STARTING FULL ALARM");
-        warning = 0;
-        alarm = 1;
-        interface.displayAlert(1); // Sound full alarm
-      }
     }
+    
+    // Check if loud alarm needs to sound
+    if (warning) if (instantAlarm || (millis() - warningStartTime > warningDuration)) {
+      Serial.println("STARTING FULL ALARM!");
+      warning = 0;
+      alarm = 1;
+      interface.displayAlert(1); // Sound full alarm
+    }
+    
   }
 
   // --- End Alert ---
@@ -183,7 +195,6 @@ class Backpack {
   public:
   // === SETUP & TICK ===
   void setup() {
-    delay(2000); // Delay 1s for Serial
     Serial.println("Starting Security Backpack!");
 
     int error = scan.setup();
@@ -215,8 +226,10 @@ Scan scan;
 
 void setup() {
   Serial.begin(9600);
+  for (int i = 0; i < 100 && !Serial; i++) {
+    delay(10);
+  }
   backpack.setup();
-  delay(2000);
 }
 
 void loop() {
