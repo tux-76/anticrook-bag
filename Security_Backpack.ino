@@ -22,7 +22,6 @@
   Written by Jonas Blackwood
 */
 
-#include <LiquidCrystal.h>
 #include "Interface.h"
 #include "Scan.h"
 
@@ -132,11 +131,11 @@ class Backpack {
       Serial.print("Keycode in: "); Serial.println(keycode);
 
       bool special = checkSpecialCodes(keycode);
+      authenticated = auth.checkKeycode(keycode);
       interface.clearKeycode();
       Serial.print("Special="); Serial.println(special);
 
       if (!special) {
-        authenticated = auth.checkKeycode(keycode);
         if (!authenticated) {
           interface.notifyUnauth();
           keycodeResetPrevCode = 0; // If not auth, end keycode reset
@@ -218,7 +217,7 @@ class Backpack {
 
   // --- Special Codes ---
   bool checkSpecialCodes(char* keycode) { // Return 1 blocks default authentication behavior
-    if (armedPhoto || armedPlug) return 0; // No special codes when armed
+    if (armedAccel || armedPlug || armedPhoto || isAlert()) return 0; // No special codes when armed
 
     if (interface.keycodesAreEqual(keycode, "AAAA")) {
       startKeycodeReset();
@@ -298,7 +297,6 @@ class Backpack {
 
 
 Backpack backpack;
-Scan scan;
 
 void setup() {
   Serial.begin(9600);

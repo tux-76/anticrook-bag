@@ -28,6 +28,10 @@
 // --- Constructor ---
 // Like the setup() function of the interface;
 void Interface::setup() {
+  pinMode(BUTTON_PIN, INPUT);
+
+  keypad.setup();
+  
   lcd.begin(16, 2);
   lcd.createChar(SYMBOL_LOCKED, SYMBOL_LOCKED_IMG);
   lcd.createChar(SYMBOL_UNLOCKED, SYMBOL_UNLOCKED_IMG);
@@ -36,6 +40,7 @@ void Interface::setup() {
   lcd.createChar(SYMBOL_PLUG, SYMBOL_PLUG_IMG);
   lcd.createChar(SYMBOL_PHOTO, SYMBOL_PHOTO_IMG);
   lcd.clear();
+
   displayDisarmed();
 }
 

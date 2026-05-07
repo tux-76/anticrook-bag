@@ -31,6 +31,8 @@
 #include "Auth.h"
 #include "Sound.h"
 
+#include <LiquidCrystal.h>
+
 // === LCD SCREEN ===
 constexpr int LCD_RS=52, LCD_EN=53, LCD_D4=48, LCD_D5=49, LCD_D6=50, LCD_D7=51;
 // constexpr int LCD_RS=52, LCD_EN=53, LCD_D4=48, LCD_D5=49, LCD_D6=50, LCD_D7=51;
@@ -62,9 +64,7 @@ class Interface {
     int backpackError = 0;
 
   public:
-    Interface() : lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7) {
-      pinMode(BUTTON_PIN, INPUT);
-    };
+    Interface() : lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7) {};
     void registerError(int code);
 
     bool checkKeycodeIn();
