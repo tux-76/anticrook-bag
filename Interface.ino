@@ -203,9 +203,11 @@ void Interface::displayStatus(bool armedPlug, bool armedAccel, bool armedPhoto, 
   displayError();
 }
 
-void Interface::armPlugBeep(bool up) {
-  if (up) sound.beepArmed();
-  else sound.beepDisarmed();
+void Interface::beepArmed(bool up, bool plugged) {
+  if (up) {
+    if (plugged) sound.beepArmedPlug();
+    else sound.beepArmedAccel();
+  } else sound.beepDisarmed();
 }
 
 void Interface::displayAlert(bool isAlarm) {

@@ -152,11 +152,11 @@ class Backpack {
   void updateArmed() {
     if (!armedAccel && (armedPlug || plugged)) { // If plugged in or secured by plug
       armedPlug = !armedPlug;
-      interface.armPlugBeep(armedPlug);
+      interface.beepArmed(armedPlug, 1);
     } else if (armedAccel || !plugged) { // If on battery or secured by accelerometer
       if (accelOperational) {
         armedAccel = !armedAccel;
-        interface.armPlugBeep(armedAccel);
+        interface.beepArmed(armedAccel, 0);
         // if (armedAccel) interface.notifyAccel();
       } else {
         interface.notifyAccelError();
@@ -252,6 +252,7 @@ class Backpack {
   void finishKeycodeReset(char* keycode) {
     interface.clearKeycode();
     if (!auth.resetKeycode(keycode)) { // If reset errors
+      interface.beepError();
       interface.notifyKeycodeResetError();
     } else {
       interface.notifyKeycodeResetSuccess();

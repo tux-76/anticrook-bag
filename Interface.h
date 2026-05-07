@@ -105,7 +105,8 @@ class Interface {
     void displayAlert(bool isAlarm);
     void endAlert();
 
-    void armPlugBeep(bool up);
+    void beepArmed(bool up, bool plugged);
+    void beepError() {sound.beepUnauth();}
 
     void setup();
     void tick();

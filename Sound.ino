@@ -100,7 +100,14 @@ void Sound::endAlarm() {
 }
 
 // --- Beeps ---
-void Sound::beepArmed() {
+void Sound::beepArmedPlug() {
+  pushNote(NOTE_G5);
+  pushNote(NOTE_B5);
+  pushNote(NOTE_C6);
+  playNextNote();
+}
+
+void Sound::beepArmedAccel() {
   pushNote(NOTE_G5);
   pushNote(NOTE_C6);
   playNextNote();

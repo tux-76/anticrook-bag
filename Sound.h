@@ -64,7 +64,8 @@ class Sound {
     void endWarning();
     void soundAlarm();
     void endAlarm();
-    void beepArmed();
+    void beepArmedPlug();
+    void beepArmedAccel();
     void beepDisarmed();
     void beepKey();
     void beepUnauth();
