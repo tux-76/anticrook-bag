@@ -117,7 +117,7 @@ class Backpack {
     Serial.print("Dark Val Pack: "); Serial.println(darkValPhotoPack);
     if (darkValPhotoCirc < PHOTO_MINIMUM && darkValPhotoPack < PHOTO_MINIMUM) {
       armedPhoto = 1;
-      interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
+      if (!isAlert()) interface.displayStatus(armedPlug, armedAccel, armedPhoto, plugged);
     } else {
       armedPhoto = 0;
       interface.notifyPackUnsecure();
@@ -131,7 +131,8 @@ class Backpack {
       Serial.print("Keycode in: "); Serial.println(keycode);
 
       bool special = checkSpecialCodes(keycode);
-      authenticated = auth.checkKeycode(keycode);
+      if (!special) authenticated = auth.checkKeycode(keycode);
+      else authenticated = 0;
       interface.clearKeycode();
       Serial.print("Special="); Serial.println(special);
 
@@ -149,18 +150,19 @@ class Backpack {
 
   // Runs when authenticated and arm needs to toggle
   void updateArmed() {
-    if (!armedAccel && (armedPlug || plugged)) { // If plugged in or secured by plug
+    if (armedPlug || plugged) { // If plugged in or secured by plug
       armedPlug = !armedPlug;
       interface.beepArmed(armedPlug, 1);
-    } else if (armedAccel || !plugged) { // If on battery or secured by accelerometer
-      if (accelOperational) {
-        armedAccel = !armedAccel;
-        interface.beepArmed(armedAccel, 0);
-        // if (armedAccel) interface.notifyAccel();
-      } else {
-        interface.notifyAccelError();
-      }
     }
+      
+    if (accelOperational) {
+      armedAccel = !armedAccel;
+      if (!armedPlug) interface.beepArmed(armedAccel, 0); // If a tone is not already played for the plug, play accel tone
+      // if (armedAccel) interface.notifyAccel();
+    } else {
+      interface.notifyAccelError();
+    }
+    
     // Photo resistors
     Serial.print(armedAccel); Serial.print(" "); Serial.print(armedPlug);
     if (armedAccel || armedPlug) { // If it is armed
@@ -180,7 +182,8 @@ class Backpack {
     if (!isAlert()) {
       if (armedPlug && !plugged) {
         startWarning();
-      } else if (armedAccel) {
+      }
+      if (armedAccel) {
         if (scan.checkAccelMovement()) {
           startWarning();
           Serial.println("ACCELEROMETER MOVEMENT!");
